@@ -15,6 +15,10 @@ import android.widget.Button;
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
@@ -22,8 +26,9 @@ public class ChatLobbyActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager layoutManager;
-    private ArrayList<String> crNames = new ArrayList<>();
-    private ArrayList<String> crDescriptions = new ArrayList<>();
+    private ArrayList<Chatroom> chatrooms = new ArrayList<>();
+
+    private DatabaseReference dbRef;
 
     private Button logoutButton;
 
@@ -32,7 +37,8 @@ public class ChatLobbyActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_lobby);
 
-        initChatrooms();
+        dbRef = FirebaseDatabase.getInstance().getReference();
+
 
         logoutButton = findViewById(R.id.logout_button);
         logoutButton.setOnClickListener(new View.OnClickListener() {
@@ -41,6 +47,35 @@ public class ChatLobbyActivity extends AppCompatActivity {
                 signOut();
             }
         });
+    }
+
+    @Override
+    protected void onStart()
+    {
+        super.onStart();
+
+        initChatrooms();
+
+        /*dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                if (dataSnapshot.child("Messages").child(chatroomName).getChildrenCount() != 0) {
+                    for (DataSnapshot messages : dataSnapshot.child("Messages").child(chatroomName).getChildren()) {
+                        messages.getChildren()
+                        Message message = messages.getValue(Message.class);
+                        messagesList.add(message);
+                    }
+                    messageAdapter.notifyDataSetChanged();
+                    userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });*/
     }
 
     public void signOut() {
@@ -57,35 +92,16 @@ public class ChatLobbyActivity extends AppCompatActivity {
     }
 
     private void initChatrooms() {
-        crNames.add("Games");
-        crDescriptions.add("Talk about video games");
 
-        crNames.add("Sports");
-        crDescriptions.add("Everything about sports");
-
-        crNames.add("Movies");
-        crDescriptions.add("Movies and series");
-
-        crNames.add("Food");
-        crDescriptions.add("Food and drinks");
-
-        crNames.add("Cars");
-        crDescriptions.add("Everything about cars");
-
-        crNames.add("Random");
-        crDescriptions.add("Talk about random topics");
-
-        crNames.add("Animals");
-        crDescriptions.add("Pets and animals");
-
-        crNames.add("Electronics");
-        crDescriptions.add("Talk about the newest hardware");
-
-        crNames.add("University");
-        crDescriptions.add("Talk with university students");
-
-        crNames.add("Fashion");
-        crDescriptions.add("Everything about fashion");
+        chatrooms.add(new Chatroom("Games", "Talk about video games"));
+        chatrooms.add(new Chatroom("Sports", "Everything about sports"));
+        chatrooms.add(new Chatroom("Movies", "Movies and series"));
+        chatrooms.add(new Chatroom("Food", "Food and drinks"));
+        chatrooms.add(new Chatroom("Cars", "Everything about cars"));
+        chatrooms.add(new Chatroom("Random", "Talk about random topics"));
+        chatrooms.add(new Chatroom("Animals", "Pets and animals"));
+        chatrooms.add(new Chatroom("Electronics", "Talk about the newest hardware"));
+        chatrooms.add(new Chatroom("University", "Talk with university students"));
 
         initRecycleView();
     }
@@ -95,7 +111,7 @@ public class ChatLobbyActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        mAdapter = new LobbyAdapter(this, crNames, crDescriptions);
+        mAdapter = new ChatroomAdapter(this, chatrooms);
         recyclerView.setAdapter(mAdapter);
     }
 }

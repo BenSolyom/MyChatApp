@@ -15,18 +15,16 @@ import java.util.ArrayList;
 
 import androidx.recyclerview.widget.RecyclerView;
 import mychatapp.solyombence.com.mychatapp.R;
-import mychatapp.solyombence.com.mychatapp.chatroom.ChatroomActivity;
+import mychatapp.solyombence.com.mychatapp.chatroom.ChatActivity;
 
-public class LobbyAdapter extends RecyclerView.Adapter<LobbyAdapter.ViewHolder> {
+public class ChatroomAdapter extends RecyclerView.Adapter<ChatroomAdapter.ViewHolder> {
 
     private static final String TAG = "RecyclerViewAdapter";
-    private ArrayList<String> crNames;
-    private ArrayList<String> crDescriptions;
+    private ArrayList<Chatroom> chatrooms;
     private Context mContext;
 
-    public LobbyAdapter(Context context, ArrayList<String> mcrNames, ArrayList<String> mcrDescriptions) {
-        crNames = mcrNames;
-        crDescriptions = mcrDescriptions;
+    public ChatroomAdapter(Context context, ArrayList<Chatroom> mChatrooms) {
+        chatrooms = mChatrooms;
         mContext = context;
         Log.d("adapter", "adapter set");
     }
@@ -36,15 +34,13 @@ public class LobbyAdapter extends RecyclerView.Adapter<LobbyAdapter.ViewHolder> 
 
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_layout, parent, false);
 
-        ViewHolder vh = new ViewHolder(v);
-        return vh;
+        return new ViewHolder(v);
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView name;
-        TextView description;
-        ImageView chevron;
-        RelativeLayout parentLayout;
+        public TextView name, description;
+        public ImageView chevron;
+        public RelativeLayout parentLayout;
 
         public ViewHolder(View itemView) {
                 super(itemView);
@@ -59,23 +55,19 @@ public class LobbyAdapter extends RecyclerView.Adapter<LobbyAdapter.ViewHolder> 
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder: called.");
-        // - get element from your dataset at this position
-        // - replace the contents of the view with that element
 
-
-        holder.name.setText(crNames.get(position));
-        holder.description.setText(crDescriptions.get(position));
+        holder.name.setText(chatrooms.get(position).getName());
+        holder.description.setText(chatrooms.get(position).getDescription());
 
         holder.parentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d(TAG, "onClick: clicked on: " + crNames.get(position));
+                Log.d(TAG, "onClick: clicked on: " + chatrooms.get(position).getName());
 
-                Toast.makeText(mContext, crNames.get(position), Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, chatrooms.get(position).getName(), Toast.LENGTH_SHORT).show();
 
-                Intent intent = new Intent(mContext, ChatroomActivity.class);
-                //intent.putExtra("image_url", mImages.get(position));
-                //intent.putExtra("image_name", mImageNames.get(position));
+                Intent intent = new Intent(mContext, ChatActivity.class);
+                intent.putExtra("chatroomname", chatrooms.get(position).getName());
                 mContext.startActivity(intent);
             }
         });
@@ -83,7 +75,7 @@ public class LobbyAdapter extends RecyclerView.Adapter<LobbyAdapter.ViewHolder> 
 
     @Override
     public int getItemCount() {
-        return crNames.size();
+        return chatrooms.size();
     }
 
 }
