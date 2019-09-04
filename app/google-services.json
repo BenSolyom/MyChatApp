@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "686561145690",
+    "firebase_url": "https://mychatapplication-18fe9.firebaseio.com",
+    "project_id": "mychatapplication-18fe9",
+    "storage_bucket": "mychatapplication-18fe9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:686561145690:android:5811804cebf66e4e",
+        "android_client_info": {
+          "package_name": "mychatapp.solyombence.com.mychatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "686561145690-dpgnkr80d0t8a595r3hdd856egbd2bs4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "mychatapp.solyombence.com.mychatapp",
+            "certificate_hash": "3d6eada250a15cfc9a07577fba63df6c63f1dd8c"
+          }
+        },
+        {
+          "client_id": "686561145690-po6182dfnajvk8a83btbdhvfj65hb3gs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3jc6-E4rp15f-xVUf19BWxBFVPoxKYWo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "686561145690-po6182dfnajvk8a83btbdhvfj65hb3gs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
