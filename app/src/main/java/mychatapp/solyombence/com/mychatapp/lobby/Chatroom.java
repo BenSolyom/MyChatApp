@@ -1,5 +1,7 @@
 package mychatapp.solyombence.com.mychatapp.lobby;
 
+// The Chatroom class holds all the required information about chatrooms: name of the chatroom, description
+// of the chatroom, timestamp of the latest message in the chatroom
 public class Chatroom {
     private String name;
     private String description;

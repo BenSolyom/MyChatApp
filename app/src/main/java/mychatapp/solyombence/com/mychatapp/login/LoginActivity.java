@@ -15,9 +15,10 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.Arrays;
 import java.util.List;
 
-public class LoginActivity extends AppCompatActivity { //} implements View.OnClickListener {
+// The Login activity, providing the options to log in with either a Facebook or a Google account
+public class LoginActivity extends AppCompatActivity {
 
-    private static final int RC_SIGN_IN = 123;
+    private static final int RC_SIGN_IN = 123; // Sign-in request code
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

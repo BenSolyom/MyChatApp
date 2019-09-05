@@ -10,9 +10,10 @@ import android.os.Handler;
 
 import com.google.firebase.auth.FirebaseAuth;
 
+// The splash activity, which is shown upon starting the application
 public class SplashActivity extends AppCompatActivity {
 
-    private static int SPLASH_TIME_OUT = 1000;
+    private static int SPLASH_TIME_OUT = 3000; // 3 second timeout
     private FirebaseAuth auth;
 
     @Override
@@ -26,13 +27,13 @@ public class SplashActivity extends AppCompatActivity {
         @Override
         public void run() {
             Intent homeIntent;
-            if (auth.getCurrentUser() != null) {
+            if (auth.getCurrentUser() != null) { // If the user is logged in, the chat lobby activity will start up
                 homeIntent = new Intent(SplashActivity.this, ChatLobbyActivity.class);
-            } else {
+            } else { // If the user is not logged in, the login activity will start up
                 homeIntent = new Intent(SplashActivity.this, LoginActivity.class);
             }
             startActivity(homeIntent);
-            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out); // Starting the fading animation
             finish();
             }
         }, SPLASH_TIME_OUT);

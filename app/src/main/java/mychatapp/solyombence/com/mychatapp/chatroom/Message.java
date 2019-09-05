@@ -2,6 +2,9 @@ package mychatapp.solyombence.com.mychatapp.chatroom;
 
 import android.graphics.Bitmap;
 
+// The Message class holds all the required information about messages: username of the writer of the message,
+// the message itself which can be a text or an image, name of the chatroom where the message was written,
+// timestamp of the message, type of the message (text or image type)
 public class Message {
     private String username;
     private String message;
@@ -13,6 +16,7 @@ public class Message {
     public Message() {
     }
 
+    // Two constructors, one for text type, one for image type messages
     public Message(String username, String message, String chatroomName, String timeStamp, String type) {
         this.username = username;
         this.message = message;
@@ -45,6 +49,14 @@ public class Message {
         this.message = message;
     }
 
+    public Bitmap getImage() {
+        return image;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
+    }
+
     public String getChatroomName() {
         return chatroomName;
     }
@@ -67,13 +79,5 @@ public class Message {
 
     public void setType(String type) {
         this.type = type;
-    }
-
-    public Bitmap getImage() {
-        return image;
-    }
-
-    public void setImage(Bitmap image) {
-        this.image = image;
     }
 }

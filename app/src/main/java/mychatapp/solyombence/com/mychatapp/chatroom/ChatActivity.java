@@ -41,6 +41,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import mychatapp.solyombence.com.mychatapp.R;
 
+// The chat activity, responsible for the chat functionality itself in the application
 public class ChatActivity extends AppCompatActivity {
 
     private boolean loaded;
@@ -59,7 +60,7 @@ public class ChatActivity extends AppCompatActivity {
     private ImageButton CameraButton;
     private EditText MessageInputText;
 
-    private final List<Message> messagesList = new ArrayList<>();
+    private final List<Message> messagesList = new ArrayList<>(); // The list of messages to be loaded in the chat
     private LinearLayoutManager linearLayoutManager;
     private MessageAdapter messageAdapter;
     private RecyclerView userMessagesList;
@@ -71,21 +72,23 @@ public class ChatActivity extends AppCompatActivity {
     public static final int GET_FROM_CAMERA = 2;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatroom);
 
         mAuth = FirebaseAuth.getInstance();
-        dbRef = FirebaseDatabase.getInstance().getReference();
-        storage = FirebaseStorage.getInstance();
+        dbRef = FirebaseDatabase.getInstance().getReference(); // The database stores all the messages sent in the app
+        storage = FirebaseStorage.getInstance(); // The storage stores the uploaded images
         storageRef = storage.getReference("images");
 
         Intent intent = getIntent();
         chatroomName = intent.getStringExtra("chatroomname");
 
+        // A method for initializing the buttons, the edit text field and the recycle view
         IntialiseControllers();
 
+        // Onclicklisteners for the send button (for sending messages), the gallery button (for sending images
+        // from the phones gallery) and the camera button (for sending images from the phones camera)
         SendMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view)
@@ -109,11 +112,13 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
+    // onActivityResult is responsible for creating the image type messages (triggered by the gallery and the camera
+    // button, handling exceptions
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        //Upload from gallery
+        //Uploading and sending image from gallery
 
         if(requestCode==GET_FROM_GALLERY && resultCode == Activity.RESULT_OK) {
 
@@ -129,8 +134,11 @@ public class ChatActivity extends AppCompatActivity {
 
             userName = mAuth.getCurrentUser().getDisplayName();
             timeStamp = getCurrentTimeStamp();
+
+            // Creating the message object
             Message message = new Message(userName, bitmap, chatroomName, timeStamp, "image");
 
+            // Compressing the image, putting it in a byte array and uploading it to the storage (exceptions are handled)
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
             byte[] bitmapData = baos.toByteArray();
@@ -149,23 +157,28 @@ public class ChatActivity extends AppCompatActivity {
                 }
             });
 
+            // Adding the message to the list of messages and notifying the adapter
             messagesList.add(message);
             messageAdapter.notifyDataSetChanged();
             userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
         }
 
 
-        //Upload from camera
+        //Uploading and sending image from camera
 
         else if (requestCode==GET_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
 
+            // Creating the bitmap object from the image taken by the camera
             Bitmap bitmap = null;
             bitmap = (Bitmap) data.getExtras().get("data");
 
             userName = mAuth.getCurrentUser().getDisplayName();
             timeStamp = getCurrentTimeStamp();
+
+            // Creating the message object
             Message message = new Message(userName, bitmap, chatroomName, timeStamp, "image");
 
+            // Compressing the image, putting it in a byte array and uploading it to the storage (exceptions are handled)
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
             byte[] bitmapData = baos.toByteArray();
@@ -182,14 +195,15 @@ public class ChatActivity extends AppCompatActivity {
                 }
             });
 
+            // Adding the message to the list of messages and notifying the adapter
             messagesList.add(message);
             messageAdapter.notifyDataSetChanged();
             userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
         }
     }
 
-    private void IntialiseControllers()
-    {
+    private void IntialiseControllers() {
+
         SendMessageButton = findViewById(R.id.send_message_btn);
         GalleryButton = findViewById(R.id.gallery_button);
         CameraButton = findViewById(R.id.camera_button);
@@ -200,14 +214,13 @@ public class ChatActivity extends AppCompatActivity {
         linearLayoutManager = new LinearLayoutManager(this);
         userMessagesList.setLayoutManager(linearLayoutManager);
         userMessagesList.setAdapter(messageAdapter);
-
     }
 
     @Override
-    protected void onStart()
-    {
+    protected void onStart() {
         super.onStart();
 
+        // Ensuring with the "loaded" boolean object that the messages retrieved from the database are only loaded once
         loaded = false;
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -216,11 +229,15 @@ public class ChatActivity extends AppCompatActivity {
                 if (childrenCount != 0 && !loaded) {
                     int i = 0;
                     for (DataSnapshot messages : dataSnapshot.child("Messages").child(chatroomName).getChildren()) {
+                        // Ensuring that only the last 50 messages are loaded
                         if (childrenCount - i++ <= 50) {
+                            // Creating the message object from the DataSnapshot and adding it to the list of messages
                             Message message = messages.getValue(Message.class);
                             messagesList.add(message);
                         }
                     }
+                    // Notifying the adapter and setting the loaded boolean to true, so that the already loaded
+                    // messages won't be loaded again while staying in the chatroom
                     messageAdapter.notifyDataSetChanged();
                     userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
                     loaded = true;
@@ -235,20 +252,23 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
-
-    private void SendMessage()
-    {
+    // This method is responsible for sending messages in the chat (text type messages)
+    private void SendMessage() {
+        // Storing the contents of the edit text field in a string object
         String messageText = MessageInputText.getText().toString();
 
         if (TextUtils.isEmpty(messageText))
-        {
             Toast.makeText(this, "Write your message first...", Toast.LENGTH_SHORT).show();
-        }
+
+        // If the string object is not empty (the user has input a message) the message object is constructed using
+        // all the required parameters
         else {
             userName = mAuth.getCurrentUser().getDisplayName();
             timeStamp = getCurrentTimeStamp();
 
             Message message = new Message(userName, messageText, chatroomName, timeStamp, "text");
+
+            //Creating a unique ID for each message and uploading them to the database
             String messageId = dbRef.child("Messages").child(chatroomName).push().getKey();
             dbRef.child("Messages").child(chatroomName).child(messageId).setValue(message).addOnCompleteListener(new OnCompleteListener() {
                 @Override
@@ -261,12 +281,14 @@ public class ChatActivity extends AppCompatActivity {
                 }
             });
 
+            // Adding the message to the list of messages and notifying the adapter
             messagesList.add(message);
             messageAdapter.notifyDataSetChanged();
             userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
         }
     }
 
+    // A method for returning the current time and date in a string format
     private String getCurrentTimeStamp() {
         Calendar calendar = Calendar.getInstance();
 

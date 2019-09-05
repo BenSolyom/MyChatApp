@@ -17,11 +17,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import mychatapp.solyombence.com.mychatapp.R;
 import mychatapp.solyombence.com.mychatapp.chatroom.ChatActivity;
 
+// The adapter class for populating the chatroom list in the chatroom lobby activity, following standard implementation
+// guidelines
 public class ChatroomAdapter extends RecyclerView.Adapter<ChatroomAdapter.ViewHolder> {
 
     private static final String TAG = "RecyclerViewAdapter";
     private ArrayList<Chatroom> chatrooms;
     private Context mContext;
+
 
     public ChatroomAdapter(Context context, ArrayList<Chatroom> mChatrooms) {
         chatrooms = mChatrooms;
@@ -31,6 +34,7 @@ public class ChatroomAdapter extends RecyclerView.Adapter<ChatroomAdapter.ViewHo
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        // The list_item_layout XML defines the layout of a single chatroom element in the lobby
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_layout, parent, false);
         return new ViewHolder(v);
     }

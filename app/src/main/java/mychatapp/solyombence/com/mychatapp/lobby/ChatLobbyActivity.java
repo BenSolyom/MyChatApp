@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+// The Chat Lobby activity, where the list of predefined chatrooms is presented to the user
 public class ChatLobbyActivity extends AppCompatActivity {
     private ArrayList<Chatroom> chatrooms = new ArrayList<>();
 
@@ -44,11 +45,15 @@ public class ChatLobbyActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_lobby);
 
+        // Access to the database is required for retrieving timestamp data of the messages in each chatroom,
+        // so that the list of chatrooms can be sorted by latest timestamp
         dbRef = FirebaseDatabase.getInstance().getReference();
 
+        // The method for initializing the predefined chatrooms
         initChatrooms();
 
         swipeRefreshLayout = findViewById(R.id.swipe_container);
+        // A method for setting up the refresh functionality
         setSwipeRefresh();
         logoutButton = findViewById(R.id.logout_button);
         logoutButton.setOnClickListener(new View.OnClickListener() {
@@ -66,6 +71,11 @@ public class ChatLobbyActivity extends AppCompatActivity {
         fetchData();
     }
 
+    // The method responsible for retrieving data from the Firebase database. First it retrieves the stored messages
+    // in each chatroom (if there are any messages), and saving the timestamp of the latest message into the
+    // lastTimeStamp String object. Then each chatroom object in the chatrooms ArrayList will be updated with the
+    // retrieved timestamp data. Afterwards they are sorted based on the timestamp values (Collections.sort method).
+    // Finally, the chatroom adapter (crAdapter) is notified of the changes. Possible database errors are also handled.
     public void fetchData() {
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -96,6 +106,7 @@ public class ChatLobbyActivity extends AppCompatActivity {
         });
     }
 
+    // The signOut method assigned to the logout button of this activity, signing the user out
     public void signOut() {
         AuthUI.getInstance()
                 .signOut(this)
@@ -124,6 +135,7 @@ public class ChatLobbyActivity extends AppCompatActivity {
         initRecycleView();
     }
 
+    // A method for initializing the recycle view, using the chatroom adapter (crAdapter)
     private void initRecycleView() {
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
@@ -142,6 +154,7 @@ public class ChatLobbyActivity extends AppCompatActivity {
         });
     }
 
+    // Fetching data from the database upon refreshing the activity
     void refreshItems() {
         // Reloading items
         fetchData();
