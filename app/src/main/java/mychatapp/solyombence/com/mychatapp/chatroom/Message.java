@@ -1,10 +1,12 @@
 package mychatapp.solyombence.com.mychatapp.chatroom;
 
+import android.graphics.Bitmap;
+
 public class Message {
     private String username;
     private String message;
+    private Bitmap image;
     private String chatroomName;
-    //private String messageID;
     private String timeStamp;
     private String type;
 
@@ -14,6 +16,14 @@ public class Message {
     public Message(String username, String message, String chatroomName, String timeStamp, String type) {
         this.username = username;
         this.message = message;
+        this.chatroomName = chatroomName;
+        this.timeStamp = timeStamp;
+        this.type = type;
+    }
+
+    public Message(String username, Bitmap image, String chatroomName, String timeStamp, String type) {
+        this.username = username;
+        this.image = image;
         this.chatroomName = chatroomName;
         this.timeStamp = timeStamp;
         this.type = type;
@@ -65,5 +75,13 @@ public class Message {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Bitmap getImage() {
+        return image;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
     }
 }

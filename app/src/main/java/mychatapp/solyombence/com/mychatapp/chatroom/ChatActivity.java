@@ -1,8 +1,12 @@
 package mychatapp.solyombence.com.mychatapp.chatroom;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +16,8 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -19,7 +25,13 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,20 +46,20 @@ import mychatapp.solyombence.com.mychatapp.R;
 
 public class ChatActivity extends AppCompatActivity {
 
-    private String messageReceiverID, messageReceiverName, messageReceiverImage, messageSenderID;
     private boolean loaded;
 
     private String chatroomName;
     private String userName;
     private String timeStamp;
-    private String messageText;
-    private CircleImageView userImage;
 
     private FirebaseAuth mAuth;
     private DatabaseReference dbRef;
+    private FirebaseStorage storage;
+    private StorageReference storageRef;
 
     private Button SendMessageButton;
-    private ImageButton SendFilesButton;
+    private ImageButton GalleryButton;
+    private ImageButton CameraButton;
     private EditText MessageInputText;
 
     private final List<Message> messagesList = new ArrayList<>();
@@ -58,7 +70,8 @@ public class ChatActivity extends AppCompatActivity {
 
     private String saveCurrentTime, saveCurrentDate;
 
-
+    public static final int GET_FROM_GALLERY = 1;
+    public static final int GET_FROM_CAMERA = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -68,15 +81,15 @@ public class ChatActivity extends AppCompatActivity {
 
 
         mAuth = FirebaseAuth.getInstance();
-        //messageSenderID = mAuth.getCurrentUser().getUid();
         dbRef = FirebaseDatabase.getInstance().getReference();
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReference("images");
+
         Intent intent = getIntent();
         chatroomName = intent.getStringExtra("chatroomname");
 
         IntialiseControllers();
 
-        //userName.setText(messageReceiverName);
-        //Picasso.get().load(messageReceiverImage).placeholder(R.drawable.chat_icon_small).into(userImage);
         SendMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view)
@@ -84,21 +97,100 @@ public class ChatActivity extends AppCompatActivity {
                 SendMessage();
             }
         });
+        GalleryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view)
+            {
+                startActivityForResult(new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI), GET_FROM_GALLERY);
+            }
+        });
+        CameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view)
+            {
+                startActivityForResult(new Intent(MediaStore.ACTION_IMAGE_CAPTURE), GET_FROM_CAMERA);
+            }
+        });
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        //Upload from gallery
+
+        if(requestCode==GET_FROM_GALLERY && resultCode == Activity.RESULT_OK) {
+            Uri selectedImage = data.getData();
+            Bitmap bitmap = null;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            userName = mAuth.getCurrentUser().getDisplayName();
+            timeStamp = getCurrentTimeStamp();
+            Message message = new Message(userName, bitmap, chatroomName, timeStamp, "image");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] bitmapData = baos.toByteArray();
+
+            UploadTask uploadTask = storageRef.putBytes(bitmapData);
+            uploadTask.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    exception.printStackTrace();
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                }
+            });
+            messagesList.add(message);
+            messageAdapter.notifyDataSetChanged();
+            userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
+        }
 
 
+        //Upload from camera
+
+        else if (requestCode==GET_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
+            Bitmap bitmap = null;
+            bitmap = (Bitmap) data.getExtras().get("data");
+            userName = mAuth.getCurrentUser().getDisplayName();
+            timeStamp = getCurrentTimeStamp();
+            Message message = new Message(userName, bitmap, chatroomName, timeStamp, "image");
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] bitmapData = baos.toByteArray();
+
+            UploadTask uploadTask = storageRef.putBytes(bitmapData);
+            uploadTask.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Handle unsuccessful uploads
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+                    // ...
+                }
+            });
+
+            messagesList.add(message);
+            messageAdapter.notifyDataSetChanged();
+            userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
+        }
+    }
 
     private void IntialiseControllers()
     {
-
-        LayoutInflater layoutInflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-        //userName = findViewById(R.id.username);
-        //userImage = findViewById(R.id.avatar);
-
         SendMessageButton = findViewById(R.id.send_message_btn);
-        SendFilesButton = findViewById(R.id.send_image_button);
+        GalleryButton = findViewById(R.id.gallery_button);
+        CameraButton = findViewById(R.id.camera_button);
         MessageInputText = findViewById(R.id.input_message);
 
         messageAdapter = new MessageAdapter(messagesList);
@@ -118,11 +210,14 @@ public class ChatActivity extends AppCompatActivity {
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-
-                if (dataSnapshot.child("Messages").child(chatroomName).getChildrenCount() != 0 && !loaded) {
+                long childrenCount = dataSnapshot.child("Messages").child(chatroomName).getChildrenCount();
+                if (childrenCount != 0 && !loaded) {
+                    int i = 0;
                     for (DataSnapshot messages : dataSnapshot.child("Messages").child(chatroomName).getChildren()) {
-                        Message message = messages.getValue(Message.class);
-                        messagesList.add(message);
+                        if (childrenCount - i++ <= 50) {
+                            Message message = messages.getValue(Message.class);
+                            messagesList.add(message);
+                        }
                     }
                     messageAdapter.notifyDataSetChanged();
                     userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
