@@ -1,7 +1,6 @@
 package mychatapp.solyombence.com.mychatapp.lobby;
 
 public class Chatroom {
-
     private String name;
     private String description;
     private String lastTimeStamp;

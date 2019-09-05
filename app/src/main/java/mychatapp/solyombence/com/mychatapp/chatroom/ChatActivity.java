@@ -1,14 +1,12 @@
 package mychatapp.solyombence.com.mychatapp.chatroom;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -41,7 +39,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import de.hdodenhof.circleimageview.CircleImageView;
 import mychatapp.solyombence.com.mychatapp.R;
 
 public class ChatActivity extends AppCompatActivity {
@@ -78,7 +75,6 @@ public class ChatActivity extends AppCompatActivity {
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatroom);
-
 
         mAuth = FirebaseAuth.getInstance();
         dbRef = FirebaseDatabase.getInstance().getReference();
@@ -120,6 +116,7 @@ public class ChatActivity extends AppCompatActivity {
         //Upload from gallery
 
         if(requestCode==GET_FROM_GALLERY && resultCode == Activity.RESULT_OK) {
+
             Uri selectedImage = data.getData();
             Bitmap bitmap = null;
             try {
@@ -129,9 +126,46 @@ public class ChatActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
             userName = mAuth.getCurrentUser().getDisplayName();
             timeStamp = getCurrentTimeStamp();
             Message message = new Message(userName, bitmap, chatroomName, timeStamp, "image");
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+            byte[] bitmapData = baos.toByteArray();
+
+            UploadTask uploadTask = storageRef.putBytes(bitmapData);
+            uploadTask.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    Toast.makeText(ChatActivity.this, "Failed to upload image", Toast.LENGTH_SHORT).show();
+                    exception.printStackTrace();
+                }
+            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+
+                }
+            });
+
+            messagesList.add(message);
+            messageAdapter.notifyDataSetChanged();
+            userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
+        }
+
+
+        //Upload from camera
+
+        else if (requestCode==GET_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
+
+            Bitmap bitmap = null;
+            bitmap = (Bitmap) data.getExtras().get("data");
+
+            userName = mAuth.getCurrentUser().getDisplayName();
+            timeStamp = getCurrentTimeStamp();
+            Message message = new Message(userName, bitmap, chatroomName, timeStamp, "image");
+
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
             byte[] bitmapData = baos.toByteArray();
@@ -145,38 +179,6 @@ public class ChatActivity extends AppCompatActivity {
             }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-
-                }
-            });
-            messagesList.add(message);
-            messageAdapter.notifyDataSetChanged();
-            userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
-        }
-
-
-        //Upload from camera
-
-        else if (requestCode==GET_FROM_CAMERA && resultCode == Activity.RESULT_OK) {
-            Bitmap bitmap = null;
-            bitmap = (Bitmap) data.getExtras().get("data");
-            userName = mAuth.getCurrentUser().getDisplayName();
-            timeStamp = getCurrentTimeStamp();
-            Message message = new Message(userName, bitmap, chatroomName, timeStamp, "image");
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-            byte[] bitmapData = baos.toByteArray();
-
-            UploadTask uploadTask = storageRef.putBytes(bitmapData);
-            uploadTask.addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle unsuccessful uploads
-                }
-            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
-                    // ...
                 }
             });
 
@@ -224,10 +226,10 @@ public class ChatActivity extends AppCompatActivity {
                     loaded = true;
                 }
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                Toast.makeText(ChatActivity.this, "Database error", Toast.LENGTH_SHORT).show();
+                databaseError.toException().printStackTrace();
             }
         });
     }
@@ -266,7 +268,6 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private String getCurrentTimeStamp() {
-
         Calendar calendar = Calendar.getInstance();
 
         SimpleDateFormat currentDate = new SimpleDateFormat("MMM dd, yyyy");

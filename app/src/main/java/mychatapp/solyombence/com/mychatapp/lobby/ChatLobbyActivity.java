@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -26,18 +27,17 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 
 public class ChatLobbyActivity extends AppCompatActivity {
-    private RecyclerView recyclerView;
-    private RecyclerView.Adapter crAdapter;
-    private RecyclerView.LayoutManager layoutManager;
     private ArrayList<Chatroom> chatrooms = new ArrayList<>();
-    private SwipeRefreshLayout swipeRefreshLayout;
 
     private DatabaseReference dbRef;
 
     private Button logoutButton;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter crAdapter;
+    private RecyclerView.LayoutManager layoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,15 +63,13 @@ public class ChatLobbyActivity extends AppCompatActivity {
     protected void onStart()
     {
         super.onStart();
-
         fetchData();
-
     }
 
     public void fetchData() {
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (Chatroom cr : chatrooms) {
                     if (dataSnapshot.child("Messages").child(cr.getName()).exists()) {
                         String lastTimeStamp = "";
@@ -90,10 +88,10 @@ public class ChatLobbyActivity extends AppCompatActivity {
                 });
                 crAdapter.notifyDataSetChanged();
             }
-
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Toast.makeText(ChatLobbyActivity.this, "Database error", Toast.LENGTH_SHORT).show();
+                databaseError.toException().printStackTrace();
             }
         });
     }
@@ -139,13 +137,13 @@ public class ChatLobbyActivity extends AppCompatActivity {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                // Refresh items
                 refreshItems();
             }
         });
     }
+
     void refreshItems() {
-        // Load items
+        // Reloading items
         fetchData();
         swipeRefreshLayout.setRefreshing(false);
     }

@@ -53,14 +53,6 @@ public class Message {
         this.chatroomName = chatroomName;
     }
 
-    /*public String getMessageID() {
-        return messageID;
-    }
-
-    public void setMessageID(String messageID) {
-        this.messageID = messageID;
-    }*/
-
     public String getTimeStamp() {
         return timeStamp;
     }

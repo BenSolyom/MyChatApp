@@ -9,7 +9,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
 
 import java.util.List;
 
@@ -20,10 +19,8 @@ import mychatapp.solyombence.com.mychatapp.R;
 
 public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageViewHolder> {
 
-
     private List<Message> userMessagesList;
     private FirebaseAuth mAuth;
-
 
     public MessageAdapter (List<Message> userMessagesList)
     {
@@ -31,15 +28,12 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
         mAuth = FirebaseAuth.getInstance();
     }
 
-
-
     public class MessageViewHolder extends RecyclerView.ViewHolder
     {
         public TextView messageText, usernameText, timeStampText;
         public ImageView imageView;
         public CircleImageView profileImage;
         public RelativeLayout parentLayout;
-
 
         public MessageViewHolder(@NonNull View itemView)
         {
