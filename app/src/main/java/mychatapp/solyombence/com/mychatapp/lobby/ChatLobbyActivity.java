@@ -4,7 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import mychatapp.solyombence.com.mychatapp.R;
+import mychatapp.solyombence.com.mychatapp.chatroom.Message;
 import mychatapp.solyombence.com.mychatapp.login.LoginActivity;
 
 import android.content.Intent;
@@ -16,17 +18,22 @@ import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
 
 public class ChatLobbyActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
-    private RecyclerView.Adapter mAdapter;
+    private RecyclerView.Adapter crAdapter;
     private RecyclerView.LayoutManager layoutManager;
     private ArrayList<Chatroom> chatrooms = new ArrayList<>();
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     private DatabaseReference dbRef;
 
@@ -39,7 +46,10 @@ public class ChatLobbyActivity extends AppCompatActivity {
 
         dbRef = FirebaseDatabase.getInstance().getReference();
 
+        initChatrooms();
 
+        swipeRefreshLayout = findViewById(R.id.swipe_container);
+        setSwipeRefresh();
         logoutButton = findViewById(R.id.logout_button);
         logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -54,28 +64,38 @@ public class ChatLobbyActivity extends AppCompatActivity {
     {
         super.onStart();
 
-        initChatrooms();
+        fetchData();
 
-        /*dbRef.addValueEventListener(new ValueEventListener() {
+    }
+
+    public void fetchData() {
+        dbRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-
-                if (dataSnapshot.child("Messages").child(chatroomName).getChildrenCount() != 0) {
-                    for (DataSnapshot messages : dataSnapshot.child("Messages").child(chatroomName).getChildren()) {
-                        messages.getChildren()
-                        Message message = messages.getValue(Message.class);
-                        messagesList.add(message);
+                for (Chatroom cr : chatrooms) {
+                    if (dataSnapshot.child("Messages").child(cr.getName()).exists()) {
+                        String lastTimeStamp = "";
+                        for (DataSnapshot messages : dataSnapshot.child("Messages").child(cr.getName()).getChildren()) {
+                            Message message = messages.getValue(Message.class);
+                            lastTimeStamp = message.getTimeStamp();
+                        }
+                        cr.setLastTimeStamp(lastTimeStamp);
                     }
-                    messageAdapter.notifyDataSetChanged();
-                    userMessagesList.smoothScrollToPosition(userMessagesList.getAdapter().getItemCount());
                 }
+                Collections.sort(chatrooms, new Comparator<Chatroom>() {
+                    @Override
+                    public int compare(Chatroom cr1, Chatroom cr2) {
+                        return cr2.getLastTimeStamp().compareTo(cr1.getLastTimeStamp());
+                    }
+                });
+                crAdapter.notifyDataSetChanged();
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });*/
+        });
     }
 
     public void signOut() {
@@ -111,7 +131,22 @@ public class ChatLobbyActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        mAdapter = new ChatroomAdapter(this, chatrooms);
-        recyclerView.setAdapter(mAdapter);
+        crAdapter = new ChatroomAdapter(this, chatrooms);
+        recyclerView.setAdapter(crAdapter);
+    }
+
+    private void setSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Refresh items
+                refreshItems();
+            }
+        });
+    }
+    void refreshItems() {
+        // Load items
+        fetchData();
+        swipeRefreshLayout.setRefreshing(false);
     }
 }
